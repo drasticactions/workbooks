@@ -1,0 +1,73 @@
+---
+uti: com.xamarin.workbook
+platforms:
+- Console
+packages:
+- id: Newtonsoft.Json
+  version: 9.0.1
+---
+
+# JSON.NET Deserialize Example
+
+First, we need to get some JSON. Usually, this comes from a REST endpoint. For example, the result could look like this…
+
+{ "foo": "bar", "butts": true, "numbers": \[ 3, 4 ], "number": 3 }
+
+Instead of calling an endpoint, however, I’m going to hardcode the result into a string.
+
+```csharp
+var result = "{\"foo\":\"bar\",\"butts\":true,\"numbers\":[3,4],\"number\":3}";
+```
+
+Now that we have our result set, we now want to deserialize it into an object. There are several ways to do this, but most commenly, we use JSON.NET. With it, we can serialize and deserialize JSON. First, we can create types and deserialize our JSON to create full objects.
+
+```csharp
+#r "Newtonsoft.Json"
+#r "Microsoft.CSharp"
+```
+
+```csharp
+using Newtonsoft.Json;
+
+public class RootObject
+{
+    [JsonProperty("foo")]
+    public string Foo { get; set; }
+    
+    [JsonProperty("butts")]
+    public bool Butts { get; set; }
+    
+    [JsonProperty("numbers")]
+    public int[] Numbers { get; set; }
+    
+    [JsonProperty("number")]
+    public int Number { get; set; }
+}
+```
+
+This creates our typed object, which we can then feed into JSON.NET. The JsonProperty attribute is used so JSON.NET knows what field deserializes into what. You don’t _have_ to give it however. If you name your object exactly like the outputted JSON, it will be deserialized as well. But this results in ugly types, and if we’re bothering with types at all the names might as well look good.
+
+```csharp
+using Newtonsoft.Json;
+
+RootObject typedObject = JsonConvert.DeserializeObject<RootObject>(result);
+```
+
+With this, we get full intellisense on the object, since it’s just a \`RootObject\`. This works with nested classes as well, so long as it’s apart of the class, it will get deserialized.\
+\
+Of course, we can avoid types by using \`dynamic\`. \`dynamic\` won’t give us intellisense, but for very complex JSON it’s much easier to handle.
+
+```csharp
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+dynamic dynamicResultObject = JsonConvert.DeserializeObject(result);
+```
+
+The results here are all \`JObject\` and \`JProperty\`, which is quite ugly. But if we know the type on the object already, we can just call it directly.
+
+```csharp
+string foobar = dynamicResultObject.foo;
+```
+
+For some JSON types that are very hard to turn into C# classes, using \`dynamic\` is the best way to go.
